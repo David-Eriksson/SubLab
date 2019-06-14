@@ -7,3 +7,8 @@ collaboration. bioRxiv.
 Marques-Smith, A., Neto, J. P., Lopes, G. et al. (2018b) Simultaneous patch-clamp and dense CMOS
 probe extracellular recordings from the same cortical neuron in anaesthetized rats.
 CRCNS.org.
+
+The spikes were sorted with Kilosort.
+
+Pachitariu, M., Steinmetz, N., Kadir, S., Carandini, M. and Kenneth, D. H. (2016) Kilosort: realtime
+spike-sorting for extracellular electrophysiology with hundreds of channels. bioRxiv.
