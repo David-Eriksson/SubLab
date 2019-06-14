@@ -3,7 +3,7 @@ Subthreshold reconstruction Laboratory
 
 SubLab uses large scale spiking activity to reconstruct subthreshold activity for individual units. The input spike file is a binary file consisting of pairs of 'doubles': Spike Identity (Unit number) and Spike time (seconds).
 
-**To run SubLab:**
+**To run SubLab**
 
 Install Matlab or Octave.
 
@@ -32,7 +32,7 @@ myRate_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 Simulation_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 
 
-**Additional notes:**
+**Additional notes**
 
 The program starts multiple instances of Matlab or Octave to speed up processing. In this way the SubLab_Start.m processes the following scripts:
 
