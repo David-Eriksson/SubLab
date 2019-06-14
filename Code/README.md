@@ -20,4 +20,4 @@ Associated to those respective scripts there are 4 output folders (under the use
 
 In each of those folders there are the TODO, DONE, Running folder, and a folder for each session. Each script looks in the respective TODO folder for which sessions that has to be done. 
 
-For the ReconstructionTraining and ReconstructionComplete there is a also TODO folder for each session. This TODO folder contains which is the next epoch for each reconstructed neuron.
+For the ReconstructionTraining and ReconstructionComplete there is a also TODO folder for each session. This TODO folder contains which is the next epoch for each neuron.
