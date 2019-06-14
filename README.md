@@ -25,7 +25,7 @@ The program will ask for a spike file and a ground truth recording. If press "ca
 
 **Default settings**
 
-By default the program runs 2 epochs of training. For a real reconstruction one should use 10 or more epochs. This is information is stored in the maxNumberOfEpochs.txt file. Then algorithm uses a validation data set to decide the optimal epoch. 
+By default the program runs 2 epochs of training. For a real reconstruction one should use 10 or more epochs. This information is stored in the maxNumberOfEpochs.txt file. The algorithm uses a validation data set to decide the optimal epoch. 
 
 By default the program runs two threads:
 
@@ -49,4 +49,4 @@ ReconstructionTraining_distr.m % Training reconstruction algorithm to optimize p
 
 ReconstructionComplete_distr.m % Reconstructing the entire data set based on the cross-validated training parameters.
 
-myRate_distr.m % Calculate the my-Rate in order to estimate the reliability of the reconstruction (see publication).
+myRate_distr.m % Calculate the my-Rate in order to estimate the reliability of the reconstruction (see manuscript reference).
