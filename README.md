@@ -1,7 +1,7 @@
 # SubLab
 Subthreshold reconstruction Laboratory
 
-SubLab uses large scale spiking activity to reconstruct subthreshold activity for individual units. The input spike file is a binary file consisting of pairs of 'doubles': Spike identity (Unit number) and spike time (seconds).
+SubLab uses large scale spiking activity to reconstruct subthreshold activity for individual units. The input spike file is a binary file consisting of pairs of 'doubles': Spike identity (unit number) and spike time (seconds).
 
 ???? Bioarxiv ?????
 
