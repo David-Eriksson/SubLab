@@ -1,4 +1,4 @@
-The script SubLab_Start.m starts multiple instances of Matlab or Octave to speed up processing. When one of the instances is done with an epoch for a certain neuron the reconstruction parameters are saved. Then that instance is checking for new epochs from other neurons to process. A TODO folder for each script keeps track of which jobs there are. SubLab_Start.m starts multiple instances of the following scripts in this order:
+The script SubLab_Start.m starts multiple instances of Matlab or Octave to speed up processing. When one of the instances is finished with an epoch for a certain neuron the reconstruction parameters are saved. Then that same instance is checking for new epochs from other neurons to process. A TODO folder for each script keeps track of new jobs. SubLab_Start.m starts multiple instances of the following scripts in this order:
 
 1. SpikesLIFSimulation_distr.m % Simulate spiking and ground truth data
 
