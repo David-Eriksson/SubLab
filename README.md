@@ -5,6 +5,8 @@ SubLab uses large scale spiking activity to reconstruct subthreshold activity fo
 
 ???? Bioarxiv ?????
 
+
+
 **To run SubLab**
 
 Install Matlab or Octave.
@@ -19,6 +21,8 @@ The program will ask you to give the path to the Matlab or Octave binary. This p
 
 The program will ask for a spike file and a ground truth recording. If press "cancel" for spike file then the program will generate simulated data. If press "cancel" for ground truth recording SubLab will simply not display the ground truth next to the reconstruction.
 
+
+
 **Default settings**
 
 By default the program runs 2 epochs of training. For a real reconstruction one should use 10 or more epochs. This is information is stored in the maxNumberOfEpochs.txt file. Then algorithm uses a validation data set to decide the optimal epoch. 
@@ -32,6 +36,7 @@ ReconstructionComplete_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core,
 myRate_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 
 Simulation_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
+
 
 
 **Additional notes**
