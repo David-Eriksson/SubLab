@@ -11,15 +11,15 @@ SubLab uses large scale spiking activity to reconstruct subthreshold activity fo
 
 Install Matlab or Octave.
 
-Download code directory.
+Download SubLab.zip in the code directory and unpack it.
 
 Data directory: contains a spike file and an ground truth intra-cellular recording (not necessary for running SubLab). If not downloaded SubLab will simulate spikes and ground truth recordings.
 
 Run the file SubLab.m in the SubLab directory.
 
-The program will ask you to give the path to the Matlab or Octave binary. This path can be pasted into the SubLab_Start.m for variable "matlabOctavePath". To find the path to the executable: Right-click on the matlab/octave application icon.
-
 The program will ask for a spike file and a ground truth recording. If press "cancel" for spike file then the program will generate simulated data. If press "cancel" for ground truth recording SubLab will simply not display the ground truth next to the reconstruction.
+
+The program will ask you to give the path to the Matlab or Octave binary. This path can be pasted into the SubLab_Start.m for variable "matlabOctavePath". To find the path to the executable: Right-click on the matlab/octave application icon.
 
 
 
