@@ -56,8 +56,8 @@ try
     fullReconstructionMainPath = char(fread(fid)');
     fclose(fid);
     
-    rand('state',time*10000000000);  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(time*10000000000);
+    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000);
     fid = fopen([fullReconstructionMainPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     [st, str] = matlabOctaveLs([fullReconstructionMainPath 'TODO\'],matlab1_octave0);

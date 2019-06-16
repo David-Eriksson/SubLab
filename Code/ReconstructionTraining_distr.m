@@ -81,8 +81,8 @@ try
     debugPath = [resultsPath 'Debug\'];
     mkdir(debugPath);
 
-    rand('state',time*10000000000);  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(time*10000000000);
+    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000);
     fid = fopen([resultsMainPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     g_trainingAndTestData = [];

@@ -28,8 +28,8 @@ try
     parallelControlPath = char(fread(fid)');
     fclose(fid);
     
-    rand('state',time*10000000000);  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(time*10000000000);
+    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000);
     fid = fopen([resultsPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     finishedJobs = 0;
@@ -122,7 +122,7 @@ try
 
             tbins = sumWithout';
             % Divide with a for loop to decrease memory consumption
-            Skip = 100;
+            Skip = 20;
             summedCC = [];
             for ei=0:Skip:(length(edges)-1)
                 edgeInds = ei+(1:Skip);
