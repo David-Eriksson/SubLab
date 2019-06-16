@@ -3,6 +3,8 @@
 clear variables; % Such that debugging can be done as if the script was called as a new octave instance
 close all;
 
+warning('off');
+
 global g_opts;
 global g_nodeArray;
 global g_parameters;
@@ -54,9 +56,8 @@ try
     fullReconstructionMainPath = char(fread(fid)');
     fclose(fid);
     
-    rand('state',cputime*100000);    
-    %thisJobNr = round(cputime*1000000);
-    thisJobNr = round(rand(1)*1000000000);
+    rand('state',time*10000000000);  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(time*10000000000);
     fid = fopen([fullReconstructionMainPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     [st, str] = matlabOctaveLs([fullReconstructionMainPath 'TODO\'],matlab1_octave0);

@@ -13,6 +13,8 @@ global g_momentum2nd;
 global g_momentum1st;
 global g_paramAccumT;
 
+warning('off');
+
 g_nodeArray = [];
 g_parameters = [];
 g_deltaParameters = [];
@@ -32,6 +34,7 @@ catch
     version;
     matlab1_octave0 = 1;
 end
+
 
 fid = fopen(['resultsMainPath.txt'],'r');
 resultsMainPath = fscanf(fid,'%s\n');
@@ -69,6 +72,10 @@ mkdir(seedPath);
 g_trainingAndTestData = [];
 referenceData = [];
 
+fid = fopen([spikesMainPath trainingDataDir '\TargetNeurons.bin'],'r');
+targetNeurons = fread(fid,'int');
+fclose(fid);
+
 g_opts.loadTemporalResolution = 10;
 g_opts.forwardTemporalResolution = 10;
 g_opts.trainedTemporalResolution = 10;
@@ -76,9 +83,12 @@ LoadTrainingAndTestData;
 
 units = unique(g_trainingAndTestData{1}(:,1));
 
+fid = fopen(['batchSizeIn10msBins.txt'],'r');
+g_opts.batchSize = str2num(fscanf(fid,'%s\n'));
+fclose(fid);
+
 g_opts.nrSpikes = size(g_trainingAndTestData{1},1);
 g_opts.recordingSamples = max(g_trainingAndTestData{1}(:,2));
-g_opts.batchSize = 5000;
 g_opts.jumpTime = 100;
 g_opts.preJumpTime = 50;
 g_opts.uniqueNeurons = units'; 
@@ -121,17 +131,17 @@ nodeIds = [];
 rand('state',1);
 randn('state',1);
 if (length(trainingDataDir) >= length('Neuropixels')) && ~isempty(strfind(trainingDataDir,'Neuropixels'))
-    labelNeurons = units;
+    targetNeurons = units;
     analogTraceBatches = 1;
     maxNumberOfTrainingSets = 1;
     rps = 1;
 elseif (length(trainingDataDir) >= length('AllLayers_c')) && ~isempty(strfind(trainingDataDir,'AllLayers_c'))
-    labelNeurons = units;
+    targetNeurons = units;
     analogTraceBatches = 1;
     maxNumberOfTrainingSets = 1;
     rps = 1;
 elseif strcmp(trainingDataDir(1),'c') == 1
-    labelNeurons = units; %was units(1)
+    targetNeurons = units; %was units(1)
     disp('Put all units for reconstruction (confirm by press a key)');
     %pause
     
@@ -150,13 +160,13 @@ elseif strcmp(trainingDataDir(1),'c') == 1
 
     maxNumberOfTrainingSets = 2;
 elseif (length(trainingDataDir) >= length('PlainSpikeData')) && ~isempty(strfind(trainingDataDir,'PlainSpikeData'))
-    %labelNeurons = units;
+    %targetNeurons = units;
     analogTraceBatches = 1;
     maxNumberOfTrainingSets = 1;
     rps = 1;
 else
-    %labelNeurons = [1:60];
-    %labelNeurons = 54;
+    %targetNeurons = [1:60];
+    %targetNeurons = 54;
     analogTraceBatches = 1;
     maxNumberOfTrainingSets = 1;
     rps = 1;
@@ -176,13 +186,13 @@ for sei = 1:length(seedNrs)
     for doi = 1:length(dropOutRatio)
         for wdi = 1:length(weightDecays)
             for tbi = 1:length(timeBias)
-                for lni = 1:length(labelNeurons)
+                for lni = 1:length(targetNeurons)
                     for atbi = 1:min([maxNumberOfTrainingSets length(analogTraceBatches)])%was 4
                       
                         lni
                         g_opts.epoch = 1;
                         g_opts.resultsPath = resultsPath;
-                        g_opts.labelNeuron = labelNeurons(lni);
+                        g_opts.labelNeuron = targetNeurons(lni);
                         g_opts.inputNeurons = setdiff(g_opts.uniqueNeurons,g_opts.labelNeuron);
                         g_opts.inputNeurons = [g_opts.inputNeurons g_opts.inputNeurons];            
                         g_opts.extension.inputNeurons = [g_opts.inputNeurons g_opts.inputNeurons];

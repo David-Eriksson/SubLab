@@ -30,7 +30,7 @@ dirStrs = {}; % For batch usage: If spikes already put in the Spikes folder unde
 if isempty(dirStrs)
     % Below: path to spiking data. Binary file consisting of pairs of 'doubles': Spike Identity (Unit number) and Spike time (seconds)
     % Note: filename needs to begin with 'PlainSpikeData'
-    % Units (Unit identitites) that should be reconstructed are defined by 'labelNeurons' see below
+    % Units (Unit identitites) that should be reconstructed are defined by 'targetNeurons' see below
     
     [fname, fpath, fltidx] = uigetfile('*.bin', 'Select spike file');
     
@@ -39,32 +39,50 @@ if isempty(dirStrs)
         fid = fopen([fpath fname],'r');
         spikes = fread(fid,'double');
         fclose(fid);
-        disp(['Number of units: ' num2str(length(unique(spikes(1:2:end))))]);
-        disp(['Recording duration (seconds): ' num2str(max(spikes(2:2:end)))]);
-        disp(['Average firing rate (Hz):  ' num2str(length(spikes)/2/length(unique(spikes(1:2:end)))/max(spikes(2:2:end)))]);
-        clear spikes;
-        disp('Is this spike information correct?');
-        disp('Press a key to continue or press Ctrl+C to stop');
-        pause
+        infoStr = ['Number of units: ' num2str(length(unique(spikes(1:2:end)))) char(10) 'Recording duration (seconds): ' num2str(max(spikes(2:2:end))) char(10) 'Average firing rate (Hz):  ' num2str(length(spikes)/2/length(unique(spikes(1:2:end)))/max(spikes(2:2:end)))];
+        
+        answer = questdlg(infoStr,'Is this spike information correct?','Yes','No','Yes');
+        if strcmp(answer,'No')==1
+            return;
+        end
       
         spikePath = [fpath fname]; %'D:\Data\Spikes\c42_c42\PlainSpikeData_c42.bin';
-        labelNeurons = [1];
+        answer = questdlg('Do you have intracellular data?','Intracellular data','Yes','No','Yes');
+        if strcmp(answer,'Yes')==1           
         
-        [fname, fpath, fltidx] = uigetfile('*.bin', 'Select intracellular file');
-        if fname(1) ~= 0
-            intracellularPathFile = [fpath fname];
-            fid = fopen([fpath fname],'r');
-            intracellularData = fread(fid,'single');
-            fclose(fid);
-            figure(1); clf; plot(intracellularData(1:10000));
-            disp('Are the intracellular values plotted in figure 1 correct?');
-            disp('Press a key to continue or press Ctrl+C to stop');
-            pause
+            [fname, fpath, fltidx] = uigetfile([fpath '*.bin'], 'Select intracellular file');
+            if fname(1) ~= 0
+                targetNeurons = [1];
+                
+                intracellularPathFile = [fpath fname];
+                fid = fopen([fpath fname],'r');
+                intracellularData = fread(fid,'single');
+                fclose(fid);
+                figure(1); clf; plot(intracellularData(1:10000));
+                
+                answer = questdlg('Are the intracellular values plotted in figure 1 correct?','Intracellular data','Yes','No','Yes');
+                if strcmp(answer,'No')==1
+                    return;
+                end
+            end
+        else
+            targetNeurons = inputdlg('Type in which units to reconstruct','Target units',1,{'1'});
+            if isempty(targetNeurons) || isempty(targetNeurons{1})
+                targetNeurons = unique(spikes(1:2:end));
+                answer = questdlg('Do you want to reconstruct all units?','Target units','Yes','No','Yes');
+                if strcmp(answer,'No')==1
+                    return;
+                end
+            else
+                targetNeurons = str2num(targetNeurons{1});   
+            end            
         end
     else    
         spikePath = []; %do simulation
-        labelNeurons = [1 11 16 17]; % Just an arbitrary selection of units from the file
+        targetNeurons = [1 11 16 17]; % Just an arbitrary selection of units from the file
     end
+    
+    
 end
 
 % The following values depends on the number of cores and amount of memory of your workstation
@@ -74,7 +92,11 @@ ReconstructionComplete_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core,
 myRate_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 Simulation_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 fid = fopen(['maxNumberOfEpochs.txt'],'w');
-fprintf(fid,'%d',3); % Typically 30, the algorithm converges after 5-10 epochs
+fprintf(fid,'%d',5); % Typically 30, the algorithm converges after 5-10 epochs
+fclose(fid);
+
+fid = fopen(['batchSizeIn10msBins.txt'],'w');
+fprintf(fid,'%d',5000); % Typically 5000, means a batch size of 5000*10ms = 50seconds. Reduce this to decrease memory consumption. 
 fclose(fid);
 
 % **************************************************************
@@ -192,11 +214,13 @@ mkdir([resultsMainPath 'LastReadFile']);
 %     Start: Initialize Processing
 % **************************************************************
 
-str = input('Do you want to (r)esume processing or start a (n)ew processing (r/n)?', 's');
-if strcmp(str,'n') == 1
+answer = questdlg('What do you want to do?','Processing','New','Resume','Cancel','Resume');
+if strcmp(answer,'Resume') == 1
+    resume1_overwrite0 = 1;
+elseif strcmp(answer,'New') == 1
     resume1_overwrite0 = 0;
 else
-    resume1_overwrite0 = 1;
+    return;
 end
 
 if resume1_overwrite0 == 0
@@ -281,20 +305,23 @@ if isempty(dirStrs) && isempty(spikePath)
         end
         delete([spikesMainPath 'Running\*']);
         
+        newlyCreatedSpikes = 0;
+        
         while ~finished
+            
             for i=1:Simulation_ProcessCount
                 if matlab1_octave0 == 0
                     system([matlabOctavePath ' --no-gui ' sublabPath 'SpikesLIFSimulation_distr.m']);
                 else
                     system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "run(''' sublabPath 'SpikesLIFSimulation_distr.m'');exit;"'])
                 end
-                pause(5);
+                pause(1); % Important for ensuring unique processes identities since they are defined by time. 
             end
             
             
             
             disp('Running simulation to generate spikes...');
-            pause(20); % Waiting for all "Running" files to be written to disk.
+            pause(10); % Waiting for all "Running" files to be written to disk.
             disp('If you want to pause put an empty textfile:');
             disp(parallelControlPath);
             disp('');
@@ -308,42 +335,58 @@ if isempty(dirStrs) && isempty(spikePath)
                 pause(5);
             end
             
-            disp('Stopped');
-            disp('Can now press Ctrl-C or remove the stop-file to resume processing');
-            while exist(parallelControlPath) && (~finished)
-                pause(10);
+            newlyCreatedSpikes = 1;
+
+            if ~finished            
+                disp('Stopped');
+                disp('Can now press Ctrl-C or remove the stop-file to resume processing');
+                while exist(parallelControlPath) && (~finished)
+                    pause(10);
+                end
             end
         end
     else
         SpikesLIFSimulation_distr;
     end
     
+    disp('Put spikes together');
+    
     % Put together simulated spikes, current, and voltage traces
-    for di=1:length(dirStrs)
-        spikeIdAndTime = [];
-        intracellularActivity = [];
-        
-        fi = 1;
-        while exist([spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) '.bin'])
-            filename = [spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) '.bin'];
-            [N,spk,Vlast1s,SynInputs, SynCurrents] = loadLIFData(filename);
-            spk = spk([2 1],:);
-            spk(2,:) = spk(2,:)/1000+(fi-1)*simTime;
-            spikeIdAndTime = [spikeIdAndTime spk];
+    if newlyCreatedSpikes
+        for di=1:length(dirStrs)
+            spikeIdAndTime = [];
+            intracellularActivity = [];
             
-            intracellularActivity = [intracellularActivity Vlast1s(labelNeurons,:)];
+            fi = 1;
+            while exist([spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) '.bin'])
+                filename = [spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) '.bin'];
+                [N,spk,Vlast1s,SynInputs, SynCurrents] = loadLIFData(filename);
+                spk = spk([2 1],:);
+                spk(2,:) = spk(2,:)/1000+(fi-1)*simTime;
+                spikeIdAndTime = [spikeIdAndTime spk];
+                
+                intracellularActivity = [intracellularActivity Vlast1s(targetNeurons,:)];
+                
+                delete([spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) '.bin']);
+                delete([spikesMainPath dirStrs{di} '\' dirStrs{di} '_rp' num2str(fi) 'rates.bin']);
+                
+                
+                fi = fi + 1;
+            end
             
-            fi = fi + 1;
-        end
-        
-        fid = fopen([spikesMainPath dirStrs{di} '\' dirStrs{di} '.bin'],'w');
-        fwrite(fid,spikeIdAndTime(:),'double');
-        fclose(fid);
-        
-        fid = fopen([spikesMainPath dirStrs{di} '\' 'IntracellularActivity.bin'],'w');
-        fwrite(fid,intracellularActivity(:),'float');
-        fclose(fid);
-    end    
+            fid = fopen([spikesMainPath dirStrs{di} '\' dirStrs{di} '.bin'],'w');
+            fwrite(fid,spikeIdAndTime(:),'double');
+            fclose(fid);
+            
+            fid = fopen([spikesMainPath dirStrs{di} '\' 'IntracellularActivity.bin'],'w');
+            fwrite(fid,intracellularActivity(:),'float');
+            fclose(fid);
+            
+            fid = fopen([spikesMainPath dirStrs{di} '\' 'TargetNeurons.bin'],'w');
+            fwrite(fid,targetNeurons(:),'int');
+            fclose(fid);
+        end    
+    end
     %************************************************
     %   Stop: Run two different LIF simulations to generate spikes
     %***********************************************
@@ -366,10 +409,15 @@ elseif isempty(dirStrs) && ~isempty(spikePath)
     disp([spikesMainPath sessionName]);
     disp('');
     
+    fid = fopen([spikesMainPath sessionName '\TargetNeurons.bin'],'w');
+    fwrite(fid,targetNeurons(:),'int');
+    fclose(fid);
+    
     %************************************************
     %   Stop: Load demo spikes
     %***********************************************
 end
+clear targetNeurons;
 
 %*****************************************************************
 %   Start: dirStrs may contain asterisk (*) to define multiple folders
@@ -462,11 +510,11 @@ if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manuall
                 system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "run(''' sublabPath 'ReconstructionTraining_distr.m'');exit;"'])
             end
             
-            pause(5);
+            pause(1); % Important for ensuring unique processes identities since they are defined by time. 
         end
         
         disp('Running training...');
-        pause(20); % Waiting for all "Running" files to be written to disk.
+        pause(10); % Waiting for all "Running" files to be written to disk.
         disp('If you want to pause put an empty textfile:');
         disp(parallelControlPath);
         disp('');
@@ -480,10 +528,12 @@ if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manuall
             pause(5);
         end
                     
-        disp('Stopped');
-        disp('Can now press Ctrl-C or remove the stop-file to resume processing');
-        while exist(parallelControlPath) && (~finished)
-            pause(10);
+        if ~finished    
+            disp('Stopped');
+            disp('Can now press Ctrl-C or remove the stop-file to resume processing');
+            while exist(parallelControlPath) && (~finished)
+                pause(10);
+            end
         end
     end
 else
@@ -498,18 +548,22 @@ pause(10);
 for ti = 1:length(trainingDataDirs)
     resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
     
+    fid = fopen([spikesMainPath trainingDataDirs{ti} '\TargetNeurons.bin'],'r');
+    targetNeurons = fread(fid,'int');
+    fclose(fid);
+    
     try
         fid = fopen([spikesMainPath trainingDataDirs{ti} '\' 'IntracellularActivity.bin'],'r');
         analogTrace1ms = single(fread(fid,'float')');
         fclose(fid);
-        analogTrace1ms = reshape(analogTrace1ms,[length(labelNeurons) length(analogTrace1ms)/length(labelNeurons)]);
+        analogTrace1ms = reshape(analogTrace1ms,[length(targetNeurons) length(analogTrace1ms)/length(targetNeurons)]);
     catch        
         analogTrace1ms = [];
     end
     
     figure(ti); clf;
-    for ni=1:length(labelNeurons)
-        st = dir([resultsPath 'Epoch*neuron' num2str(labelNeurons(ni)) '*.mat']);
+    for ni=1:length(targetNeurons)
+        st = dir([resultsPath 'Epoch*neuron' num2str(targetNeurons(ni)) '*.mat']);
         if matlab1_octave0
             load([resultsPath st(1).name],'g_opts');
         else
@@ -523,7 +577,7 @@ for ti = 1:length(trainingDataDirs)
         disp('Correlation index for each epoch for the validation data set:');
         g_opts.reconstrCorr2
 
-        subplot(length(labelNeurons),1,ni);
+        subplot(length(targetNeurons),1,ni);
         if ~isempty(analogTrace1ms)
             analogTrace10ms = filterGaussTime(analogTrace1ms(ni,:),10);
             analogTrace10ms = analogTrace10ms(1:10:end);        
@@ -614,10 +668,11 @@ if 1 % 0 for debugging and then call ReconstructionComplete_distr.m manually
             else
                 system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "run(''' sublabPath 'ReconstructionComplete_distr.m'');exit;"'])
             end
+            pause(1); % Important for ensuring unique processes identities since they are defined by time. 
         end        
         
         disp('Running complete reconstruction...');
-        pause(20); % Waiting for all "Running" files to be written to disk.
+        pause(10); % Waiting for all "Running" files to be written to disk.
         disp('If you want to pause put an empty textfile:');
         disp(parallelControlPath);
         disp('');
@@ -631,10 +686,12 @@ if 1 % 0 for debugging and then call ReconstructionComplete_distr.m manually
             pause(5);
         end           
         
-        disp('Stopped');
-        disp('Can now press Ctrl-C or remove the stop-file to resume processing');
-        while exist(parallelControlPath) && (~finished)
-            pause(10);
+        if ~finished    
+            disp('Stopped');
+            disp('Can now press Ctrl-C or remove the stop-file to resume processing');
+            while exist(parallelControlPath) && (~finished)
+                pause(10);
+            end
         end
     end
 else
@@ -649,18 +706,22 @@ pause(10);
 for ti = 1:length(trainingDataDirs)
     resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
     
+    fid = fopen([spikesMainPath trainingDataDirs{ti} '\TargetNeurons.bin'],'r');
+    targetNeurons = fread(fid,'int');
+    fclose(fid);
+    
      try
         fid = fopen([spikesMainPath trainingDataDirs{ti} '\' 'IntracellularActivity.bin'],'r');
         analogTrace1ms = single(fread(fid,'float')');
         fclose(fid);
-        analogTrace1ms = reshape(analogTrace1ms,[length(labelNeurons) length(analogTrace1ms)/length(labelNeurons)]);
+        analogTrace1ms = reshape(analogTrace1ms,[length(targetNeurons) length(analogTrace1ms)/length(targetNeurons)]);
     catch        
         analogTrace1ms = [];
     end
     
     figure(ti+100); clf;
-    for ni=1:length(labelNeurons)
-        st = dir([fullReconstructionMainPath trainingDataDirs{ti} '\' '*Epoch*neuron' num2str(labelNeurons(ni)) '_*.mat']);
+    for ni=1:length(targetNeurons)
+        st = dir([fullReconstructionMainPath trainingDataDirs{ti} '\' '*Epoch*neuron' num2str(targetNeurons(ni)) '_*.mat']);
         readFileId = fopen([fullReconstructionMainPath trainingDataDirs{ti} '\' st(1).name],'r');
         len = fread(readFileId,1,'int32');
         reconstrCorrs = fread(readFileId,len,'single');
@@ -693,7 +754,7 @@ for ti = 1:length(trainingDataDirs)
         
         legends = {};
         
-        subplot(length(labelNeurons),1,ni);
+        subplot(length(targetNeurons),1,ni);
         if ~isempty(analogTrace1ms)
             legends{length(legends)+1} = 'Ground truth';
             analogSnippet = analogTrace1ms(ni,1:50000);
@@ -755,10 +816,11 @@ if 1 % 0 for debugging and then call myRate_distr.m manually
             else
                 system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "run(''' sublabPath 'myRate_distr.m'');exit;"'])
             end
+            pause(1); % Important for ensuring unique processes identities since they are defined by time. 
         end
         
         disp('Running myRate calculation...');
-        pause(20); % Waiting for all "Running" files to be written to disk.
+        pause(10); % Waiting for all "Running" files to be written to disk.
         disp('If you want to pause put an empty textfile:');
         disp(parallelControlPath);
         disp('');
@@ -769,13 +831,15 @@ if 1 % 0 for debugging and then call myRate_distr.m manually
             if ~isempty(str)
                 finished = 0;
             end
-            pause(5);8
+            pause(5);
         end
-            
-        disp('Stopped');
-        disp('Can now press Ctrl-C or remove the stop-file to resume processing');
-        while exist(parallelControlPath) && (~finished)
-            pause(10);
+
+        if ~finished            
+            disp('Stopped');
+            disp('Can now press Ctrl-C or remove the stop-file to resume processing');
+            while exist(parallelControlPath) && (~finished)
+                pause(10);
+            end
         end
 
     end
