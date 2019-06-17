@@ -21,7 +21,7 @@ The program will ask you to give the path to the Matlab or Octave binary. This p
 
 **Default settings**
 
-By default the program runs 2 epochs of training. For a real reconstruction one should use 10 or more epochs. This information is stored in the maxNumberOfEpochs.txt file in SubLab.m. The algorithm uses a validation data set to decide the optimal epoch. 
+By default the program runs 5 epochs of training. For a real reconstruction one should use 10 or more epochs. This information is stored in the maxNumberOfEpochs.txt file in SubLab.m. The algorithm uses a validation data set to decide the optimal epoch. 
 
 By default the program runs two threads:
 
