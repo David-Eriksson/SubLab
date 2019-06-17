@@ -26,16 +26,19 @@ end
 % **************************************************************
 dirStrs = {}; % For batch usage: If spikes already put in the Spikes folder under respective session subfolder
               % Is normally filled with different sessions to be processed , i.e. {'session1*', 'session2*'};
+intracellularPathFile = [];
 
 if isempty(dirStrs)
-    % Below: path to spiking data. Binary file consisting of pairs of 'doubles': Spike Identity (Unit number) and Spike time (seconds)
-    % Note: filename needs to begin with 'PlainSpikeData'
-    % Units (Unit identitites) that should be reconstructed are defined by 'targetNeurons' see below
+   
+    %msgStr = ['You are in the manual mode of SubLab. Here you can choose a spike file. ' char(10) 'If you choose CANCEL in the file dialog you will simulate spikes. ' char(10) 'To get in the batch mode of SubLab you have to fill in the variable "dirStrs" in the SubLab.m.' char(10) 'This should be filled in with the directory names (in the spikes directory) you want to process.' char(10) 'For example dirStrs = {''animal1_day1'',''animal2_day1''};' char(10) 'where animal1_day1 and animal2_day1 are folders in the spikes directory.' char(10) 'By running the manual mode one or more "test" directories will be created in the spikes folder. '];
+    msgStr = ['You are in the manual mode of SubLab. Here you can choose a spike file. If you choose CANCEL in the file dialog spikes will be simulated. ' char(10) 'To get in the batch mode of SubLab you have to fill in the variable "dirStrs" in the SubLab.m. This should be filled in with the directory names (in the spikes directory) you want to process. For example dirStrs = {''animal1_day1'',''animal2_day1''}; where animal1_day1 and animal2_day1 are folders in the spikes directory. By running the manual mode one or more "test" directories will be created in the spikes folder. '];
+    msgbox(msgStr,'SubLab'); 
     
     [fname, fpath, fltidx] = uigetfile('*.bin', 'Select spike file');
     
     if fname(1) ~= 0
         % Check that spiking data is according to format
+        % Below: path to spiking data. Binary file consisting of pairs of 'doubles': Spike Identity (Unit number) and Spike time (seconds)
         fid = fopen([fpath fname],'r');
         spikes = fread(fid,'double');
         fclose(fid);
@@ -214,10 +217,10 @@ mkdir([resultsMainPath 'LastReadFile']);
 %     Start: Initialize Processing
 % **************************************************************
 
-answer = questdlg('What do you want to do?','Processing','New','Resume','Cancel','Resume');
-if strcmp(answer,'Resume') == 1
+answer = questdlg('What do you want to do?','Processing','Run from scratch!','Resume (If you have already run it and paused with a stop.txt file)','Cancel','Run from scratch!');
+if strcmp(answer,'Resume (If you have already run it and paused with a stop.txt file)') == 1
     resume1_overwrite0 = 1;
-elseif strcmp(answer,'New') == 1
+elseif strcmp(answer,'Run from scratch!') == 1
     resume1_overwrite0 = 0;
 else
     return;
@@ -404,10 +407,12 @@ elseif isempty(dirStrs) && ~isempty(spikePath)
     disp('');
     dirStrs = {sessionName};
     
-    copyfile(intracellularPathFile,[spikesMainPath sessionName '\IntracellularActivity.bin']);
-    disp('Intracellular file was copied to the "Spikes directory":');
-    disp([spikesMainPath sessionName]);
-    disp('');
+    if ~isempty(intracellularPathFile)
+        copyfile(intracellularPathFile,[spikesMainPath sessionName '\IntracellularActivity.bin']);
+        disp('Intracellular file was copied to the "Spikes directory":');
+        disp([spikesMainPath sessionName]);
+        disp('');
+    end
     
     fid = fopen([spikesMainPath sessionName '\TargetNeurons.bin'],'w');
     fwrite(fid,targetNeurons(:),'int');
