@@ -27,8 +27,8 @@ try
     parallelControlPath = char(fread(fid)');
     fclose(fid);
     
-    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(datenum(clock())*100000);
+    rand('state',round(datenum(clock())*100000000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000000);
     fid = fopen([resultsPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     finishedJobs = 0;
@@ -166,11 +166,6 @@ try
         %disp('ready');
         %figure(1); clf; plot(SynInputs(1,:)); pause;
         
-        if isempty(spk)
-            Hzs = [];
-            return;
-        end
-
         
 
         if saveAnalog    
@@ -186,10 +181,8 @@ try
         disp('saving');
         saveLIFData([resultsPath folderName '\' currentFilePure '.bin'],spk,Vlast1s,SynInputs,SynCurrents,conditionInfo);
 
-        rates = cellfun(@length,spk)'/simTime;
-        fid = fopen([resultsPath folderName '\' currentFilePure 'rates.bin'],'w'); fwrite(fid,rates,'single'); fclose(fid);
-        
         if exist(parallelControlPath)
+            delete([resultsPath 'Running\' num2str(thisJobNr) '.txt']);
             return;
         end
     end

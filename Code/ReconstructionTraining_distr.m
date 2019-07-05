@@ -81,8 +81,8 @@ try
     debugPath = [resultsPath 'Debug\'];
     mkdir(debugPath);
 
-    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(datenum(clock())*100000);
+    rand('state',round(datenum(clock())*100000000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000000);
     fid = fopen([resultsMainPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     g_trainingAndTestData = [];
@@ -391,33 +391,41 @@ try
         g_opts.spikeTimeErrors2 = [g_opts.spikeTimeErrors2 meanError];
         g_opts.reconstrErrors2 = [g_opts.reconstrErrors2 reconstrErr];
         g_opts.reconstrCorr2 = [g_opts.reconstrCorr2 reconstrCorr];
-
+        
         % Save reconstruction if it is the best so far (cross checking: valid<->test)
         % Check test for determining if validation reconstruction should be stored
-        if min(g_opts.spikeTimeErrors) == g_opts.spikeTimeErrors(end)
+        if (min(g_opts.spikeTimeErrors) == g_opts.spikeTimeErrors(end)) || (epochNr==1)
             g_opts.STE2_subReconstr = validSubReconstruct;
         end
 
-        if min(g_opts.reconstrErrors) == g_opts.reconstrErrors(end)
+        if (min(g_opts.reconstrErrors) == g_opts.reconstrErrors(end)) || (epochNr==1)
             g_opts.RE2_subReconstr = validSubReconstruct;
         end
 
-        if max(g_opts.reconstrCorr) == g_opts.reconstrCorr(end)
+        if (max(g_opts.reconstrCorr) == g_opts.reconstrCorr(end)) || (epochNr==1)
             g_opts.RC2_subReconstr = validSubReconstruct;
         end
 
         % Check validation for determining if test reconstruction should be stored
-        if min(g_opts.spikeTimeErrors2) == g_opts.spikeTimeErrors2(end)
+        if (min(g_opts.spikeTimeErrors2) == g_opts.spikeTimeErrors2(end)) || (epochNr==1)
             g_opts.STE_subReconstr = testSubReconstruct;
         end
 
-        if min(g_opts.reconstrErrors2) == g_opts.reconstrErrors2(end)
+        if (min(g_opts.reconstrErrors2) == g_opts.reconstrErrors2(end)) || (epochNr==1)
             g_opts.RE_subReconstr = testSubReconstruct;
         end
 
-        if max(g_opts.reconstrCorr2) == g_opts.reconstrCorr2(end)
+        if (max(g_opts.reconstrCorr2) == g_opts.reconstrCorr2(end)) || (epochNr==1)
             g_opts.RC_subReconstr = testSubReconstruct;
         end
+        
+        if 0 %isempty(g_opts.RC_subReconstr)
+            fid=fid;
+        end
+        
+        fid = fopen([resultsMainPath 'RunningInfo\' postFix(1:(end-4)) '.bin'],'w');
+        fwrite(fid,g_opts.reconstrCorr,'double');
+        fclose(fid);
 
         fid = fopen([resultsMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],'w');
         fprintf(fid,'%s 9',currentFile);

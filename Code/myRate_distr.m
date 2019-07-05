@@ -28,8 +28,8 @@ try
     parallelControlPath = char(fread(fid)');
     fclose(fid);
     
-    rand('state',round(datenum(clock())*100000));  %cputime is relative to the start of the instance: useless
-    thisJobNr = round(datenum(clock())*100000);
+    rand('state',round(datenum(clock())*100000000));  %cputime is relative to the start of the instance: useless
+    thisJobNr = round(datenum(clock())*100000000);
     fid = fopen([resultsPath 'Running\' num2str(thisJobNr) '.txt'],'w'); fclose(fid);
 
     finishedJobs = 0;
@@ -145,6 +145,7 @@ try
         end
 
         if exist(parallelControlPath)
+            delete([resultsPath 'Running\' num2str(thisJobNr) '.txt']);
             return;
         end
     end

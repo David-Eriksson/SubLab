@@ -17,6 +17,8 @@ warning('off');
 
 if 0
     publishPath = 'C:\Users\daffs\Documents\David\SubLab_publish\';
+    delete([publishPath '*.txt']);
+    delete([publishPath '*.m']);
     copyDependencies2Folder('SubLab',publishPath);
     copyfile('VmL23_Move_Spektrum.txt',publishPath);
 end
@@ -69,7 +71,7 @@ if isempty(dirStrs)
                 end
             end
         else
-            targetNeurons = inputdlg('Type in which units to reconstruct','Target units',1,{'1'});
+            targetNeurons = inputdlg('Type in which units to reconstruct (empty => all units)','Target units',1,{'1'});
             if isempty(targetNeurons) || isempty(targetNeurons{1})
                 targetNeurons = unique(spikes(1:2:end));
                 answer = questdlg('Do you want to reconstruct all units?','Target units','Yes','No','Yes');
@@ -185,6 +187,8 @@ mkdir(resultsMainPath);
 mkdir([resultsMainPath 'TODO\']);
 mkdir([resultsMainPath 'DONE\']);
 mkdir([resultsMainPath 'Running\']);
+mkdir([resultsMainPath 'RunningInfo\']);
+delete([resultsMainPath 'RunningInfo\*']);
 fid = fopen(['resultsMainPath.txt'],'w');
 fprintf(fid,'%s',resultsMainPath);
 fclose(fid); 
@@ -206,6 +210,8 @@ mkdir([myRateMainPath 'Running\']);
 fid = fopen(['myRateMainPath.txt'],'w');
 fprintf(fid,'%s',myRateMainPath);
 fclose(fid); 
+
+
 
 mkdir([resultsMainPath 'LastReadFile']);
 
@@ -499,13 +505,13 @@ for ti=1:length(trainingDataDirs)
     delete([workingPath '*']);
 end
     
+delete([resultsMainPath 'Running\*']);
 if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manually
     finished = 1;
     [st, str] = matlabOctaveLs([resultsMainPath 'TODO\'], matlab1_octave0);
     if ~isempty(str)
         finished = 0;
     end
-    delete([resultsMainPath 'Running\*']);
     
     while ~finished
         for i=1:ReconstructionTraining_ProcessCount    
@@ -530,7 +536,16 @@ if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manuall
             if ~isempty(str)
                 finished = 0;
             end
-            pause(5);
+            pause(10);
+            runningInfoFiles = systemDir([resultsMainPath 'RunningInfo\'],'Runnr','.bin', matlab1_octave0);
+            figure(1); clf;
+            for ri=1:length(runningInfoFiles)
+                fid = fopen([resultsMainPath 'RunningInfo\' runningInfoFiles(ri).name],'r'); corrs = fread(fid,'double'); fclose(fid);
+                plot(corrs); hold on;
+            end     
+            title('Training progress for all units');
+            ylabel('Correlation index');
+            xlabel('Training epoch');
         end
                     
         if ~finished    
