@@ -1,3 +1,5 @@
+The code was written with the intention of implmenting parallel processing without a toolbox, and to be able to pause processing at any time. This admittedly led to a less readable code but I hope it will be improved at some point :blush:.  
+
 The script SubLab.m starts multiple instances of Matlab or Octave to speed up processing. When one of the instances is finished with an epoch for a certain neuron the reconstruction parameters are saved. Then that same instance is checking for new epochs from other neurons to process. A TODO folder for each script keeps track of new jobs. SubLab.m starts multiple instances of the following scripts in this order:
 
 1. SpikesLIFSimulation_distr.m % Simulate spiking and ground truth data
