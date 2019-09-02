@@ -16,13 +16,13 @@ Download SubLab_Package.zip and unpack it.
 
 SubLab is available as a **function** and as a **script**:
 
-The function is called SubLab_Function.m and reconstructs the subthreshold activity with 1 millisecond resolution of one user-defined unit (targetNeuron) given a matrix (first row unit identities and second row time spike times in seconds) with the spike identities and spike times (spikeData).
+The **function** is called SubLab_Function.m and reconstructs the subthreshold activity with 1 millisecond resolution of one user-defined unit (targetNeuron) given a matrix (first row unit identities and second row time spike times in seconds) with the spike identities and spike times (spikeData).
 
 [reconstruction_full, spikes_full] = SubLab_Function(spikeData, targetNeuron, maxNumberOfEpochs)
 
 The function can be tested using the Test_SubLab_Function.m script.
 
-The script is called SubLab.m. The script will ask you to give the path to the Matlab or Octave binary. This path can be pasted into the SubLab_Start.m for variable "matlabOctavePath". To find the path to the executable: Right-click on the matlab/octave application icon.
+The **script** is called SubLab.m. The script will ask you to give the path to the Matlab or Octave binary. This path can be pasted into the SubLab_Start.m for variable "matlabOctavePath". To find the path to the executable: Right-click on the matlab/octave application icon.
 
 
 
