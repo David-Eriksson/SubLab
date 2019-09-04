@@ -50,7 +50,7 @@ spikes = spikeData;
 spikes(2,:) = round(spikeData(2,:)*1000/g_opts.loadTemporalResolution);
 g_trainingAndTestData{1} = spikes';
 
-generateSeedFiles_ForFunction;
+generateSeedDataStructure;
 
 g_nodeArray = g_opts.nodeArray;
 nodeIds = g_opts.nodeIds;

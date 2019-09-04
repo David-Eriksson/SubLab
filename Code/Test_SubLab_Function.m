@@ -1,4 +1,4 @@
-spikePath = 'C:\Users\daffs\Documents\David\SubLab_publish\PlainSpikeData_c42.bin';
+spikePath = '..\Data\PlainSpikeData_c42.bin';
 
 fid = fopen(spikePath,'r');
 spikes = fread(fid,'double');
@@ -20,7 +20,7 @@ timeInds = (1:10000);
 figure(1); clf; plot([reconstruction_full(timeInds) ; spikes_full(timeInds)]');
 
 
-intracellularPath = 'C:\Users\daffs\Documents\David\SubLab_publish\IntracellularActivity.bin';
+intracellularPath = '..\Data\IntracellularActivity.bin';
 
 fid = fopen(intracellularPath,'r');
 IntracellularActivity = fread(fid,'single');
