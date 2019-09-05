@@ -12,8 +12,6 @@ https://www.biorxiv.org/content/10.1101/673046v1
 
 Install Matlab or Octave.
 
-Download SubLab_Package.zip and unpack it.
-
 SubLab is available as a **function** and as a **script**:
 
 The **function** is called SubLab_Function.m and reconstructs the subthreshold activity with 1 millisecond resolution of one user-defined unit (targetNeuron) given a matrix (first row unit identities and second row time spike times in seconds) with the spike identities and spike times (spikeData).
