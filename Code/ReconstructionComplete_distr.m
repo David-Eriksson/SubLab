@@ -213,12 +213,12 @@ try
             g_opts.nrSpikes = size(g_trainingAndTestData{1},1);
             g_opts.recordingSamples = max(g_trainingAndTestData{1}(:,2));
             g_opts.batchSize = g_opts.batchSize*g_opts.trainedTemporalResolution/g_opts.forwardTemporalResolution;
+            g_opts.batchSizeOverlap = round(g_opts.batchSize/20);
             g_opts.jumpTime = 100*g_opts.trainedTemporalResolution/g_opts.forwardTemporalResolution;
             g_opts.preJumpTime = 50*g_opts.trainedTemporalResolution/g_opts.forwardTemporalResolution;
-            g_opts.nrSamples = g_opts.batchSize;
+            g_opts.nrSamples = g_opts.batchSize+2*g_opts.batchSizeOverlap; % !!!must be divisible with jumpTime!!!;
             g_opts.nrBatches = floor(g_opts.recordingSamples/g_opts.batchSize);
-            g_opts.jumpCount = floor(g_opts.batchSize/g_opts.jumpTime);
-
+            g_opts.jumpCount = floor(g_opts.nrSamples/g_opts.jumpTime);
 
             disp('start network specifics');
 
@@ -299,15 +299,15 @@ try
 
                 batchIndex = bi;
                 for ni=1:length(g_nodeArray)
-                    g_nodeArray(ni).fromSample = (batchIndex-1)*g_opts.batchSize;
+                    g_nodeArray(ni).fromSample = (batchIndex-1)*g_opts.batchSize-g_opts.batchSizeOverlap;
                     g_nodeArray(ni).op(ni,[],'newBatch'); 
                 end
 
                 ff_sweep;
 
-
-                reconstruction = g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,:);
-                spikes = g_activities{g_nodeArray(g_opts.nodeIds.spikesRef).ais}(1,:);
+                tinds = (1:g_opts.batchSize)+g_opts.batchSizeOverlap;
+                reconstruction = g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,tinds);
+                spikes = g_activities{g_nodeArray(g_opts.nodeIds.spikesRef).ais}(1,tinds);
 
                 [meanError, reconstrErr, reconstrCorr] = estimateReconstrSpikeAmplitudeError(reconstruction, spikes);
                 reconstrCorrs = [reconstrCorrs reconstrCorr];
