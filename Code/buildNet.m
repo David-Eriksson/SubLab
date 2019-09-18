@@ -19,6 +19,7 @@ resetWeightsAtUpdateReference = 0;
 finalBiasPlasticOrNot = '';
 finalWeightPlasticOrNot = '';
 additionFlagStr = '';
+positiveParamaterStr = 'positive parameter';
 dataGen = 0;
 additionFlagStr = 'modify bias to fit output firing rate';
 %buildBasicSpikeTimingNet;

@@ -1,7 +1,8 @@
 % David Eriksson, 2019
 
-clear variables; % Such that debugging can be done as if the script was called as a new octave instance
-close all;
+%function ReconstructionComplete_distr(thisJobNr)
+%clear variables; % Such that debugging can be done as if the script was called as a new octave instance
+%close all;
 
 warning('off');
 
@@ -56,6 +57,10 @@ try
     fullReconstructionMainPath = char(fread(fid)');
     fclose(fid);
     
+    fid = fopen(['totalFolderNumbers.txt'],'r');
+    totalFolderNumbers = str2num(fscanf(fid,'%s\n'));
+    fclose(fid);
+    
     [st, str] = matlabOctaveLs([fullReconstructionMainPath 'TODO\'],matlab1_octave0);
     if isempty(str)
         return;
@@ -103,6 +108,8 @@ try
     finishedJobs = 0;
     while ~finishedJobs
         %try
+        
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],1);
 
             found = 0;
             while found == 0  
@@ -117,6 +124,8 @@ try
                     pause(1);
                 end
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],2);
 
             disp('directory extraction');
 
@@ -126,6 +135,8 @@ try
             for i=1:length(startInds)
                 st(i).name = str(startInds(i):(stopInds(i)+3));
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],3);
 
             disp('directory extracted');
 
@@ -145,13 +156,18 @@ try
                 g_paramAccumT = [];
                 g_opts = [];
 
-                currentFolderNumber = currentFolderNumber + 1;
+                found = 0;
+                while (currentFolderNumber < totalFolderNumbers) && (found==0)
+                    currentFolderNumber = currentFolderNumber + 1;
 
-                try
-                    fid = fopen([fullReconstructionMainPath 'TODO\' 'FullReconstructionSessions' num2str(currentFolderNumber) '.txt'],'r');
-                    trainingDataDir = fscanf(fid,'%s\n');
-                    fclose(fid);
-                catch
+                    try
+                        fid = fopen([fullReconstructionMainPath 'TODO\' 'FullReconstructionSessions' num2str(currentFolderNumber) '.txt'],'r');
+                        trainingDataDir = fscanf(fid,'%s\n');
+                        fclose(fid);
+                        found = 1;
+                    end
+                end
+                if found == 0
                     finishedJobs = 1;
                     continue;
                 end
@@ -173,6 +189,8 @@ try
                 continue;
 
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],4);
 
             i=1;
             currentDirFile = [resultsTODOPath st(i).name];
@@ -196,6 +214,8 @@ try
                 disp('file corrupted');
                 continue;
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],5);
 
             disp(trainingDataDir);
             disp(currentFilePure);
@@ -209,6 +229,8 @@ try
 
                 DataLoaded = 1;
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],6);
 
             g_opts.nrSpikes = size(g_trainingAndTestData{1},1);
             g_opts.recordingSamples = max(g_trainingAndTestData{1}(:,2));
@@ -221,6 +243,8 @@ try
             g_opts.jumpCount = floor(g_opts.nrSamples/g_opts.jumpTime);
 
             disp('start network specifics');
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],7);
 
 
             g_nodeArray = g_opts.nodeArray;
@@ -234,10 +258,22 @@ try
                     resetIndices = [resetIndices hi];
                 end
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],8);
 
             resetIndices = [resetIndices length(g_opts.spikeTimeErrors)];
             disp(['reconstrCorr: ']);
 
+            if isempty(g_opts.reconstrCorr)
+                fid = fopen([fullReconstructionMainPath 'Error\' trainingDataDir '.txt'],'w');
+                fprintf(fid,'%s',currentFilePure);
+                fprintf(fid,'reconstrCorr empty');
+                fclose(fid);
+                delete([resultsPath 'temp_' currentFilePure]);
+                continue;
+            end
+
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],9);
 
             % Crucial: estimate the number of epochs from the test and validation data set 
             [vs1 hi1] = max(g_opts.reconstrCorr);
@@ -253,6 +289,8 @@ try
             end
 
             disp(['Optimal epoch: ' num2str(hi)]);
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],10);
 
             % Can be an extended network
             changeParameter('init_seed',hi);
@@ -280,6 +318,8 @@ try
                     end
                 end
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],11);
 
             g_opts.train1test0 = 0; % test means no backprop, and no dropout
 
@@ -328,8 +368,18 @@ try
                 else
                     reconstruction = single(reconstruction);
                 end
+                
+                typeOfData = 1; % 1 = training, 2 = validation, 3 = test
+                if sum(g_opts.trainBatchIndices==bi) > 0
+                    typeOfData = 1;
+                elseif sum(g_opts.validBatchIndices==bi) > 0
+                    typeOfData = 2;
+                elseif sum(g_opts.testBatchIndices==bi) > 0
+                    typeOfData = 3;
+                end 
 
                 if 1
+                    fwrite(writeFileId,typeOfData,'int32');
                     fwrite(writeFileId,length(reconstruction),'int32');
                     fwrite(writeFileId,reconstrCorr,'single');
                     fwrite(writeFileId,spikes,'uint8');
@@ -339,11 +389,25 @@ try
                     spikes_full = [spikes_full spikes];
                 end
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],12);
 
             reconstrCorr = mean(reconstrCorrs);
             
             fclose(writeFileId);
-            movefile([resultsPath 'Full_' currentFilePure],[resultsPath 'Full' num2str(reconstrCorr,2) '_' currentFilePure]);
+            
+            counter = 0;
+            moved = 0;
+            while moved == 0
+                try
+                    counter = counter + 1;
+                    counter
+                    movefile([resultsPath 'Full_' currentFilePure],[resultsPath 'Full' num2str(reconstrCorr,2) '_' currentFilePure]);
+                    pause(5*rand(1));
+                    moved = 1;
+                end
+            end
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],13);
         
             if exist(parallelControlPath)
                 fid = fopen(currentDirFile,'w'); fclose(fid);
@@ -351,8 +415,12 @@ try
 
                 return;
             end
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],14);
 
             delete([resultsPath 'temp_' currentFilePure]);
+            
+            DEBUGJob([fullReconstructionMainPath 'LastReadFile\' num2str(thisJobNr) '.txt'],15);
             %catch
         %    msg = lasterror.message;
         %    fid = fopen([errorPath 'error.txt'],'w');

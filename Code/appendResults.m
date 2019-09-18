@@ -14,9 +14,11 @@ global g_momentum2nd;
 global g_momentum1st;
 global g_paramAccumT;
 
-itemsVec.spikesRef = [itemsVec.spikesRef g_activities{g_nodeArray(g_opts.nodeIds.spikesRef).ais}(1,:)];
-itemsVec.errorVec = [itemsVec.errorVec g_activities{g_nodeArray(g_opts.nodeIds.errorNode).ais}(1,:)];
-itemsVec.subReconstr = [itemsVec.subReconstr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,:)];
-itemsVec.goalLowerErr = [itemsVec.goalLowerErr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,:)];
-itemsVec.goalUpperErr = [itemsVec.goalUpperErr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,:)];
+tinds = (1:g_opts.batchSize)+g_opts.batchSizeOverlap;
+
+itemsVec.spikesRef = [itemsVec.spikesRef g_activities{g_nodeArray(g_opts.nodeIds.spikesRef).ais}(1,tinds)];
+itemsVec.errorVec = [itemsVec.errorVec g_activities{g_nodeArray(g_opts.nodeIds.errorNode).ais}(1,tinds)];
+itemsVec.subReconstr = [itemsVec.subReconstr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,tinds)];
+itemsVec.goalLowerErr = [itemsVec.goalLowerErr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,tinds)];
+itemsVec.goalUpperErr = [itemsVec.goalUpperErr g_activities{g_nodeArray(g_opts.nodeIds.subReconstr).ais}(1,tinds)];
 

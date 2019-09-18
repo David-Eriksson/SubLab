@@ -1,6 +1,6 @@
 % David Eriksson, 2019
 
-function [meanError, reconstrErr, reconstrCorr, rtMeanError, rtReconstrErr, rtReconstrCorr] = estimateReconstrSpikeAmplitudeError(reconstr, spikeMask) 
+function [timeErr, meanError, reconstrCorr] = estimateReconstrSpikeAmplitudeError(reconstr, spikeMask) 
   goalSpikes = find(spikeMask==1);
   
     reconstr = double(reconstr);
@@ -10,6 +10,7 @@ function [meanError, reconstrErr, reconstrCorr, rtMeanError, rtReconstrErr, rtRe
     stdVals = [];
     maxVals = [];
     minVals = [];
+    timeErrs = [];
     spikeVals = [];
     spaceVals = [];
     
@@ -36,20 +37,30 @@ function [meanError, reconstrErr, reconstrCorr, rtMeanError, rtReconstrErr, rtRe
             if (i>1) && (i<length(goalSpikes))
                 if ((previousIndex+index)/2 > 0) && ((nextIndex+index)/2 <= length(reconstr))
                     if (MaxIndex - MinIndex) > 1
+                        [maxVal maxTime] = max(reconstr(MinIndex:MaxIndex));
+                        maxTime = maxTime + MinIndex - 1;
                         meanVals = [meanVals mean(reconstr(MinIndex:MaxIndex))];
                         stdVals = [stdVals std(reconstr(MinIndex:MaxIndex))];
-                        maxVals = [maxVals max(reconstr(MinIndex:MaxIndex))];
+                        maxVals = [maxVals maxVal];
                         minVals = [minVals min(reconstr(MinIndex:MaxIndex))];
-                        
+                        if maxTime <= index
+                            timeErr = (index-maxTime)/(index-MinIndex)-0.5;
+                        else
+                            timeErr = -(index-maxTime)/(MaxIndex-index)-0.5;
+                        end
+                        if ~isnan(timeErr)
+                            timeErrs = [timeErrs timeErr];
+                        end
                         spikeVals = [spikeVals reconstr(index)];
                     end
+                    
                 end
             end
         end
     end
     if isempty(spikeVals)
+        timeErr = 0;
         meanError = 0;
-        reconstrErr = 0;
         reconstrCorr = 0;
     else
         %[chanceError mean(meanVals) std(meanVals)/sqrt(length(meanVals)) length(meanVals) mean(spikeVals) std(spikeVals)/sqrt(length(spikeVals)) length(spikeVals)]
@@ -65,7 +76,9 @@ function [meanError, reconstrErr, reconstrCorr, rtMeanError, rtReconstrErr, rtRe
             reconstrCorr = mean(corrFactors);
             
             reconstrErr = mean((maxVals - spikeVals)./(2*2*stdVals));
-        else        
+        else   
+            %timeErr = mean(timeErrs)/(std(timeErrs)/sqrt(length(timeErrs)));
+            timeErr = mean(timeErrs);
             E = spikeVals-meanVals;
             meanError = mean(E)/(std(E)/sqrt(length(E)));
             

@@ -18,7 +18,7 @@ for pi=1:length(g_parameters)
     % From which node does this parameter come?
     
     dropOutRatio = [];
-    plasticity_flag = [];
+    plasticity_flags = [];
     for ni=1:length(g_nodeArray)
         inds = find(pi == g_nodeArray(ni).pis);
         
@@ -30,7 +30,7 @@ for pi=1:length(g_parameters)
         
         if isfield(g_nodeArray(ni),'pla')
             if ~isempty(g_nodeArray(ni).pla)
-                plasticity_flag = g_nodeArray(ni).pla{inds};
+                plasticity_flags = g_nodeArray(ni).pla;
             end
         end
     end
@@ -62,22 +62,53 @@ for pi=1:length(g_parameters)
         g_momentum1st{pi}=zeros(size(g_parameters{pi}),g_opts.datatype);
         g_paramAccumT{pi} = 1;
     end
+    
+    constantParameter = 0; 
+    for fi=1:length(plasticity_flags)
+        if strcmp(plasticity_flags{fi},'constant parameter') == 1
+            constantParameter = 1;
+        end
+    end
 
-    if strcmp(plasticity_flag,'constant parameter') == 0    
+    if constantParameter == 0    
         g_momentum1st{pi}=g_opts.beta1*g_momentum1st{pi}+(1-g_opts.beta1)*g_deltaParameters{pi};    
         g_momentum2nd{pi}=g_opts.beta2*g_momentum2nd{pi}+(1-g_opts.beta2)*(g_deltaParameters{pi}.^2);
         m1st = g_momentum1st{pi}/(1-g_opts.beta1^g_paramAccumT{pi});
         m2nd = g_momentum2nd{pi}/(1-g_opts.beta2^g_paramAccumT{pi});
-        g_parameters{pi}=g_parameters{pi}-g_opts.learningRate*m1st./(sqrt(m2nd)+g_opts.learningEps) - g_opts.weightDecay*g_parameters{pi};
+        g_parameters{pi}=g_parameters{pi}-1*g_opts.learningRate*m1st./(sqrt(m2nd)+g_opts.learningEps) - g_opts.weightDecay*g_parameters{pi};
         g_paramAccumT{pi} = g_paramAccumT{pi} + 1;
     end
     
-    if strcmp(plasticity_flag,'positive parameter') == 1
-        g_parameters{pi} = g_parameters{pi}.*(g_parameters{pi}>0);
+    
+    
+    
+    positiveParameter = 0; 
+    for fi=1:length(plasticity_flags)
+        if strcmp(plasticity_flags{fi},'positive parameter') == 1
+            positiveParameter = 1;
+        end
+    end
+    
+    if positiveParameter == 1
+        mp = mean(abs(g_parameters{pi}));
+        loLimit = mp*0.0001;
+        g_parameters{pi} = g_parameters{pi}.*(g_parameters{pi}>loLimit)+loLimit.*(g_parameters{pi}<=loLimit);
+    end
+    
+    
+    
+    
+    negativeParameter = 0; 
+    for fi=1:length(plasticity_flags)
+        if strcmp(plasticity_flags{fi},'negative parameter') == 1
+            negativeParameter = 1;
+        end
     end
    
-    if strcmp(plasticity_flag,'negative parameter') == 1
-        g_parameters{pi} = g_parameters{pi}.*(g_parameters{pi}<0);
+    if negativeParameter == 1
+        mp = mean(abs(g_parameters{pi}));
+        loLimit = mp*0.0001;
+        g_parameters{pi} = g_parameters{pi}.*(g_parameters{pi}<(-loLimit))+(-loLimit).*(g_parameters{pi}>=(-loLimit));
     end 
     
 end

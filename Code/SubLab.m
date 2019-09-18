@@ -13,6 +13,10 @@ catch
     matlab1_octave0 = 1;
 end
 
+%disp('When running the rest of the neuropixels!!!! Please remove the training "if 0"');
+%disp('and remove generateSeedFiles!!!');
+%pause
+
 warning('off');
 
 if 0
@@ -26,8 +30,9 @@ end
 % **************************************************************
 %     Start: Defining what spiking data to reconstruct
 % **************************************************************
-dirStrs = {}; % For batch usage: If spikes already put in the Spikes folder under respective session subfolder
-              % Is normally filled with different sessions to be processed , i.e. {'session1*', 'session2*'};
+dirStrs = {};
+notDirStrs = {''};
+
 intracellularPathFile = [];
 
 if isempty(dirStrs)
@@ -97,7 +102,7 @@ ReconstructionComplete_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core,
 myRate_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 Simulation_ProcessCount = 2; % 10 on a Threadripper 2990WX (32 Core, 64Gb)
 fid = fopen(['maxNumberOfEpochs.txt'],'w');
-fprintf(fid,'%d',5); % Typically 30, the algorithm converges after 5-10 epochs
+fprintf(fid,'%d',5); % Typically 30 or more
 fclose(fid);
 
 fid = fopen(['batchSizeIn10msBins.txt'],'w');
@@ -112,42 +117,58 @@ fclose(fid);
 %     Start: Path setup
 % **************************************************************
 
-if (exist('matlabPath.txt') && (matlab1_octave0==1)) || (exist('octavePath.txt') && (matlab1_octave0==0))
+if 0
     if matlab1_octave0
-        fid = fopen(['matlabPath.txt'],'r');
-        matlabOctavePath = char(fread(fid)');
-        fclose(fid);
-    else
-        fid = fopen(['octavePath.txt'],'r');
-        %matlabOctavePath = fscanf(fid,'%s');
-        matlabOctavePath = char(fread(fid)');
-        fclose(fid);
-    end
-else
-    disp('To find the path to the executable: Right-click on the matlab/octave application icon.');
-    if matlab1_octave0
-        [fname, fpath, fltidx] = uigetfile('*.exe', 'Select Matlab binary file');
-    else
-        [fname, fpath, fltidx] = uigetfile('*.vbs', 'Select Octave binary file');
-    end
-    if fname(1) == 0
-        disp('Matlab/Octave executable has to be selected!');
-        pause;
-    end
-    matlabOctavePath = [fpath fname];
-    matlabOctavePath = ['"' matlabOctavePath '"']; % Accept spaces in the path
-
-    % Should be something like:
-    % matlabOctavePath = 'C:\Octave\Octave-4.4.1\octave.vbs';
-    % matlabOctavePath = 'C:\Program Files\MATLAB\R2019a\bin\matlab.exe';
-    if matlab1_octave0
+        matlabOctavePath = [matlabroot '\'];
         fid = fopen(['matlabPath.txt'],'w');
         fprintf(fid,'%s',matlabOctavePath);
         fclose(fid);
     else
+        matlabOctavePath = [matlabroot '\'];
         fid = fopen(['octavePath.txt'],'w');
         fprintf(fid,'%s',matlabOctavePath);
         fclose(fid);        
+    end
+end
+
+if 1
+    if (exist('matlabPath.txt') && (matlab1_octave0==1)) || (exist('octavePath.txt') && (matlab1_octave0==0))
+        if matlab1_octave0
+            fid = fopen(['matlabPath.txt'],'r');
+            matlabOctavePath = char(fread(fid)');
+            fclose(fid);
+        else
+            fid = fopen(['octavePath.txt'],'r');
+            %matlabOctavePath = fscanf(fid,'%s');
+            matlabOctavePath = char(fread(fid)');
+            fclose(fid);
+        end
+    else
+        disp('To find the path to the executable: Right-click on the matlab/octave application icon.');
+        if matlab1_octave0
+            [fname, fpath, fltidx] = uigetfile('*.exe', 'Select Matlab binary file');
+        else
+            [fname, fpath, fltidx] = uigetfile('*.vbs', 'Select Octave binary file');
+        end
+        if fname(1) == 0
+            disp('Matlab/Octave executable has to be selected!');
+            pause;
+        end
+        matlabOctavePath = [fpath fname];
+        matlabOctavePath = ['"' matlabOctavePath '"']; % Accept spaces in the path
+
+        % Should be something like:
+        % matlabOctavePath = 'C:\Octave\Octave-4.4.1\octave.vbs';
+        % matlabOctavePath = 'C:\Program Files\MATLAB\R2019a\bin\matlab.exe';
+        if matlab1_octave0
+            fid = fopen(['matlabPath.txt'],'w');
+            fprintf(fid,'%s',matlabOctavePath);
+            fclose(fid);
+        else
+            fid = fopen(['octavePath.txt'],'w');
+            fprintf(fid,'%s',matlabOctavePath);
+            fclose(fid);        
+        end
     end
 end
 
@@ -189,6 +210,10 @@ mkdir([resultsMainPath 'DONE\']);
 mkdir([resultsMainPath 'Running\']);
 mkdir([resultsMainPath 'RunningInfo\']);
 delete([resultsMainPath 'RunningInfo\*']);
+mkdir([resultsMainPath 'Error\']);
+delete([resultsMainPath 'Error\*']);
+mkdir([resultsMainPath 'LastReadFile']);
+delete([resultsMainPath 'LastReadFile\*']);
 fid = fopen(['resultsMainPath.txt'],'w');
 fprintf(fid,'%s',resultsMainPath);
 fclose(fid); 
@@ -198,6 +223,12 @@ mkdir(fullReconstructionMainPath);
 mkdir([fullReconstructionMainPath 'TODO\']);
 mkdir([fullReconstructionMainPath 'DONE\']);
 mkdir([fullReconstructionMainPath 'Running\']);
+mkdir([fullReconstructionMainPath 'Error\']);
+delete([fullReconstructionMainPath 'Error\*']);
+mkdir([fullReconstructionMainPath 'LastReadFile']);
+delete([fullReconstructionMainPath 'LastReadFile\*']);
+
+
 fid = fopen(['fullReconstructionMainPath.txt'],'w');
 fprintf(fid,'%s',fullReconstructionMainPath);
 fclose(fid); 
@@ -213,7 +244,7 @@ fclose(fid);
 
 
 
-mkdir([resultsMainPath 'LastReadFile']);
+
 
 % **************************************************************
 %     Stop: Path setup
@@ -223,28 +254,30 @@ mkdir([resultsMainPath 'LastReadFile']);
 %     Start: Initialize Processing
 % **************************************************************
 
-answer = questdlg('What do you want to do?','Processing','Run from scratch!','Resume (If you have already run it and paused with a stop.txt file)','Cancel','Run from scratch!');
+answer = questdlg('What do you want to do?','Processing','Run from scratch!','Resume','Cancel','Resume');
 if strcmp(answer,'Resume (If you have already run it and paused with a stop.txt file)') == 1
     resume1_overwrite0 = 1;
 elseif strcmp(answer,'Run from scratch!') == 1
+    answer = questdlg('Are you sure? This will delete all reconstructions!','Processing','Yes','No','No');
+    if strcmp(answer,'No') == 1
+        return;
+    end
     resume1_overwrite0 = 0;
 else
     return;
 end
 
-if resume1_overwrite0 == 0
-    delete([spikesMainPath 'TODO\' '*.txt']);
-    delete([spikesMainPath 'DONE\' '*.txt']);
-      
-    delete([resultsMainPath 'TODO\' '*.txt']);
-    delete([resultsMainPath 'DONE\' '*.txt']);
-    
-    delete([fullReconstructionMainPath 'TODO\' '*.txt']);
-    delete([fullReconstructionMainPath 'DONE\' '*.txt']);
-    
-    delete([myRateMainPath 'TODO\' '*.txt']);
-    delete([myRateMainPath 'DONE\' '*.txt']);
-end
+delete([spikesMainPath 'TODO\' '*.txt']);
+delete([spikesMainPath 'DONE\' '*.txt']);
+
+delete([resultsMainPath 'TODO\' '*.txt']);
+delete([resultsMainPath 'DONE\' '*.txt']);
+
+delete([fullReconstructionMainPath 'TODO\' '*.txt']);
+delete([fullReconstructionMainPath 'DONE\' '*.txt']);
+
+delete([myRateMainPath 'TODO\' '*.txt']);
+delete([myRateMainPath 'DONE\' '*.txt']);
 
 % **************************************************************
 %     Stop: Initialize Processing
@@ -434,6 +467,28 @@ clear targetNeurons;
 %   Start: dirStrs may contain asterisk (*) to define multiple folders
 %*****************************************************************
 ci = 1;
+notTrainingDataDirs = [];
+for di = 1:length(notDirStrs)
+    folders = [];
+    if isempty(strfind(notDirStrs{di},'*'))
+        folders(1).isdir = 1;
+        folders(1).name = notDirStrs{di};
+    else
+        folders = dir([spikesMainPath notDirStrs{di}]);
+    end
+    
+    for fi=1:length(folders)
+        if folders(fi).isdir
+        
+            sessionName = folders(fi).name;
+             
+            notTrainingDataDirs{ci} = sessionName;
+            ci = ci + 1;
+        end 
+    end
+end
+
+ci = 1;
 trainingDataDirs = [];
 for di = 1:length(dirStrs)
     folders = [];
@@ -446,15 +501,38 @@ for di = 1:length(dirStrs)
     
     for fi=1:length(folders)
         if folders(fi).isdir
-            folders(fi).name
         
             sessionName = folders(fi).name;
-             
-            trainingDataDirs{ci} = sessionName;
-            ci = ci + 1;
+            
+            found = 0;
+            for ni=1:length(notTrainingDataDirs)
+                if strcmp(notTrainingDataDirs{ni},sessionName) == 1
+                    found = 1;
+                end
+            end
+            
+             if ~found
+                trainingDataDirs{ci} = sessionName;
+                disp(trainingDataDirs{ci});
+                ci = ci + 1;
+             end
         end 
     end
 end
+disp('Ctrl-C if those folders should not be processed!');
+pause
+
+fid = fopen(['totalFolderNumbers.txt'],'w');
+fprintf(fid,'%d',length(trainingDataDirs)); 
+fclose(fid);
+
+numberOfTrainingSets = 1;
+disp(['numberOfTrainingSets: ' num2str(numberOfTrainingSets) ', ok?']);
+pause
+fid = fopen(['numberOfTrainingSets.txt'],'w');
+fprintf(fid,'%d',numberOfTrainingSets); 
+fclose(fid);
+
 %*****************************************************************
 %   Stop: dirStrs may contain asterisk (*) to define multiple folders
 %*****************************************************************
@@ -466,21 +544,25 @@ end
 % *         Training network with 10ms bin size.
 % *****************************************************************************
 
-for ti = 1:length(trainingDataDirs)
-    % Have to check if already prepared or already done...
-    if exist([resultsMainPath 'TODO\' 'trainingDataDir' num2str(ti) '.txt'])
-        continue;
-    end
-
-    if exist([resultsMainPath 'DONE\' trainingDataDirs{ti} '.txt'])
-        continue;
-    end
+if resume1_overwrite0 == 0
+    for ti = 1:length(trainingDataDirs)
+        resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
+        mkdir(resultsPath);
+        
+        delete(['trainingDataDir.txt']);
+        fid = fopen(['trainingDataDir.txt'],'w');
+        fprintf(fid,'%s\n',trainingDataDirs{ti});
+        fclose(fid); 
     
+        generateSeedFiles;
+    end
+end
+
+for ti = 1:length(trainingDataDirs)
     % Prepare it
     fid = fopen([resultsMainPath 'TODO\' 'trainingDataDir' num2str(ti) '.txt'],'w');
     fprintf(fid,'%s\n',trainingDataDirs{ti});
     fclose(fid);
-               
         
     resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
     mkdir(resultsPath);
@@ -488,14 +570,47 @@ for ti = 1:length(trainingDataDirs)
     %copyDependencies2Folder(mfilename(),resultsPath);
     
     delete([resultsPath 'TODO\*']);
-    delete([resultsPath 'DONE\*']);    
+    delete([resultsPath 'DONE\*']);
+    delete([resultsPath 'Error\*']);
+    delete([resultsPath 'temp_*']);  
     
     delete(['trainingDataDir.txt']);
     fid = fopen(['trainingDataDir.txt'],'w');
     fprintf(fid,'%s\n',trainingDataDirs{ti});
     fclose(fid);    
     
-    generateSeedFiles;
+    st = systemDir(resultsPath,'Epoch','.mat', matlab1_octave0);
+    
+    if length(st)==0
+        continue;
+    end
+    
+    % Check if multiple epochs of the same runnr (delete lowest)
+    epochInfo = [];
+    for sti=1:length(st)
+        
+        currentFileBase = st(sti).name;
+        inds = strfind(currentFileBase,'_');
+        epochNr = str2num(currentFileBase(6:(inds(1)-1)));
+        runnr = str2num(currentFileBase((inds(1)+6):(inds(2)-1)));
+        postFix = currentFileBase((inds(1)+1):end);
+        epochInfo = [epochInfo ; sti runnr epochNr];        
+    end
+    
+    unRuns = unique(epochInfo(:,2));
+    for ri=1:length(unRuns)
+        inds = find(epochInfo(:,2)==unRuns(ri));
+        [vs is] = max(epochInfo(inds,3));
+        
+        for ii=1:length(inds)
+            sti = epochInfo(inds(ii),1);
+            if ii~=is
+                delete([resultsPath st(sti).name]);
+            else            
+                fid = fopen([resultsPath 'TODO\' st(sti).name],'w'); fclose(fid);
+            end
+        end
+    end
 end
 
 % Only deleting working files
@@ -537,15 +652,8 @@ if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manuall
                 finished = 0;
             end
             pause(10);
-            runningInfoFiles = systemDir([resultsMainPath 'RunningInfo\'],'Runnr','.bin', matlab1_octave0);
-            figure(1); clf;
-            for ri=1:length(runningInfoFiles)
-                fid = fopen([resultsMainPath 'RunningInfo\' runningInfoFiles(ri).name],'r'); corrs = fread(fid,'double'); fclose(fid);
-                plot(corrs); hold on;
-            end     
-            title('Training progress for all units');
-            ylabel('Correlation index');
-            xlabel('Training epoch');
+            plotTrainingProgress(resultsMainPath,trainingDataDirs,matlab1_octave0);
+            
         end
                     
         if ~finished    
@@ -556,16 +664,18 @@ if 1 % For debugging put to 0 and to call ReconstructionTraining_distr.m manuall
             end
         end
     end
-else
+elseif 0
     ReconstructionTraining_distr;
 end
 
-disp('');
-disp('Wait 10 seconds for the files to be written');
-pause(10);
+disp('Training done.');
+
+%disp('');
+%disp('Wait 10 seconds for the files to be written');
+%pause(10);
 
 % Plot reconstruction result
-for ti = 1:length(trainingDataDirs)
+if 0 %for ti = 1:length(trainingDataDirs)
     resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
     
     fid = fopen([spikesMainPath trainingDataDirs{ti} '\TargetNeurons.bin'],'r');
@@ -628,7 +738,6 @@ end
 % *         Runs the trained network with 1ms resolution for the entire data set.
 % *****************************************************************************
 
-
 for ti=1:length(trainingDataDirs)
     runName = trainingDataDirs{ti};
     
@@ -682,11 +791,12 @@ if 1 % 0 for debugging and then call ReconstructionComplete_distr.m manually
     delete([fullReconstructionMainPath 'Running\*']);
     
     while ~finished
-        for i=1:ReconstructionComplete_ProcessCount    
+        for thisJobNr=1:ReconstructionComplete_ProcessCount    
             if matlab1_octave0 == 0
                 system([matlabOctavePath ' --no-gui ' sublabPath 'ReconstructionComplete_distr.m']);
             else
                 system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "run(''' sublabPath 'ReconstructionComplete_distr.m'');exit;"'])
+                %system([matlabOctavePath ' -nodisplay -nosplash -nodesktop -singleCompThread -r "ReconstructionComplete_distr ' num2str(thisJobNr) ');exit;"'])
             end
             pause(1); % Important for ensuring unique processes identities since they are defined by time. 
         end        
@@ -703,6 +813,7 @@ if 1 % 0 for debugging and then call ReconstructionComplete_distr.m manually
             if ~isempty(str)
                 finished = 0;
             end
+            plotCompleteReconstrProgress;
             pause(5);
         end           
         
@@ -718,81 +829,13 @@ else
     ReconstructionComplete_distr;
 end
 
+
+disp('Complete reconstruction done.');
+
 disp('');
 disp('Wait 10 seconds for the files to be written');
 pause(10);
 
-
-for ti = 1:length(trainingDataDirs)
-    resultsPath = [resultsMainPath trainingDataDirs{ti} '\'];
-    
-    fid = fopen([spikesMainPath trainingDataDirs{ti} '\TargetNeurons.bin'],'r');
-    targetNeurons = fread(fid,'int');
-    fclose(fid);
-    
-     try
-        fid = fopen([spikesMainPath trainingDataDirs{ti} '\' 'IntracellularActivity.bin'],'r');
-        analogTrace1ms = single(fread(fid,'float')');
-        fclose(fid);
-        analogTrace1ms = reshape(analogTrace1ms,[length(targetNeurons) length(analogTrace1ms)/length(targetNeurons)]);
-    catch        
-        analogTrace1ms = [];
-    end
-    
-    figure(ti+100); clf;
-    for ni=1:length(targetNeurons)
-        st = dir([fullReconstructionMainPath trainingDataDirs{ti} '\' '*Epoch*neuron' num2str(targetNeurons(ni)) '_*.mat']);
-        readFileId = fopen([fullReconstructionMainPath trainingDataDirs{ti} '\' st(1).name],'r');
-        len = fread(readFileId,1,'int32');
-        reconstrCorrs = fread(readFileId,len,'single');
-        reconstructions = [];
-        reconstrCorrPerBatch = [];
-        spikes = [];
-        while ~feof(readFileId)
-            fprintf('.');
-            
-            try
-                batchSize = fread(readFileId,1,'int32');
-                
-                reconstrCorr = fread(readFileId,1,'single');
-                reconstrCorrPerBatch = [reconstrCorrPerBatch reconstrCorr];
-                spike = fread(readFileId,batchSize,'uint8');
-                spikes = [spikes spike];
-                reconstruction = fread(readFileId,batchSize,'single')';
-                reconstructions = [reconstructions reconstruction];
-                pause(0.01);
-            end
-        end
-        fclose(readFileId);
-        fprintf('\n');
-        
-        disp('Cross validated correlation index for each batch:');
-        reconstrCorrPerBatch
-        
-        recSnippet = reconstructions(1:50000);
-        spkSnippet = spikes(1:50000);
-        
-        legends = {};
-        
-        subplot(length(targetNeurons),1,ni);
-        if ~isempty(analogTrace1ms)
-            legends{length(legends)+1} = 'Ground truth';
-            analogSnippet = analogTrace1ms(ni,1:50000);
-            plot(scaleStd(scaleMean(analogSnippet))); hold on;
-        end
-           
-        legends{length(legends)+1} = 'Reconstruction';
-        plot(scaleStd(scaleMean(recSnippet))); hold on;
-        hold on;
-        legends{length(legends)+1} = 'Spikes';
-        plot(4+spkSnippet,'k');
-        xlabel('Time (s)');
-        
-        legend(legends);
-        
-        
-    end
-end
 
 % ******************************************************************************
 % *         Stop: ReconstructionComplete

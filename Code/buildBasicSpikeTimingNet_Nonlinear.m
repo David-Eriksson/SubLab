@@ -31,7 +31,7 @@ nodeArray(nodeCount).init_m = g_opts.negTimeBias; %2
 nodeArray(nodeCount).init_s = 0.01; %0.1
 nodeArray(nodeCount).inp = [0];
 nodeArray(nodeCount).dir = [0];
-nodeArray(nodeCount).pla = {recurrentBiasPlasticOrNot};
+nodeArray(nodeCount).pla = {recurrentBiasPlasticOrNot, positiveParamaterStr};
 nodeArray(nodeCount).backwardPhases = backwardPhases;
 nodeArray(nodeCount).resetWeightsAtUpdateReference = resetWeightsAtUpdateReference;
 
@@ -74,7 +74,7 @@ nodeArray(nodeCount).init_m = g_opts.posTimeBias; % 2
 nodeArray(nodeCount).init_s = 0.01; %0.1
 nodeArray(nodeCount).inp = [0];
 nodeArray(nodeCount).dir = [0];
-nodeArray(nodeCount).pla = {recurrentBiasPlasticOrNot};
+nodeArray(nodeCount).pla = {recurrentBiasPlasticOrNot, positiveParamaterStr};
 nodeArray(nodeCount).backwardPhases = backwardPhases;
 nodeArray(nodeCount).resetWeightsAtUpdateReference = resetWeightsAtUpdateReference;
 

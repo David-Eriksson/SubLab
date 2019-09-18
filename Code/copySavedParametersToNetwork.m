@@ -6,17 +6,19 @@ global g_momentum2nd;
 global g_momentum1st;
 global g_paramAccumT;
 
-found = 0;
-while found == 0  
-    try
-        parameters = load(currentFile,'g_parameters','g_momentum1st','g_momentum2nd','g_paramAccumT');
-        found = 1;
-    catch
-        found = 0;
-        disp('load error');
-        pause(1);
-    end
-end
+parameters = load(currentFile,'g_parameters','g_momentum1st','g_momentum2nd','g_paramAccumT');
+
+% found = 0;
+% while found == 0  
+%     try
+%         parameters = load(currentFile,'g_parameters','g_momentum1st','g_momentum2nd','g_paramAccumT');
+%         found = 1;
+%     catch
+%         found = 0;
+%         disp('load error');
+%         pause(1);
+%     end
+% end
 
 for pi = 1:length(g_parameters)
     [R, C] = size(parameters.g_parameters{pi});

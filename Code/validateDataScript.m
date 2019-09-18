@@ -13,7 +13,7 @@ itemsVec.refSynInputs = [];
 for bi=1:length(g_opts.validBatchIndices) % Last batch is for testing
     batchIndex = g_opts.validBatchIndices(bi);
     for ni=1:length(g_nodeArray)
-        g_nodeArray(ni).fromSample = (batchIndex-1)*g_opts.batchSize;
+        g_nodeArray(ni).fromSample = (batchIndex-1)*g_opts.batchSize-g_opts.batchSizeOverlap;
         g_nodeArray(ni).op(ni,[],'newBatch'); 
     end
 

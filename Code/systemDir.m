@@ -18,7 +18,8 @@ end
 
 startInds = strfind(str,preFix);
 stopInds = strfind(str,postFix);
+
 st = [];
 for i=1:length(startInds)
-    st(i).name = str(startInds(i):(stopInds(i)+3));
+    st(i).name = str(startInds(i):(stopInds(i)+length(postFix)-1));
 end

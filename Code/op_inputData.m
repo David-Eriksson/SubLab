@@ -31,6 +31,7 @@ elseif strcmp(command,'newBatch') == 1
         ch = channels(chi);
         g_activities{g_nodeArray(nodenr).ais}(chi,spikes(spikes(:,1)==ch,2)-fromSample+1) = 1;
     end
+    chi = chi;
 elseif strcmp(command,'forward') == 1
     %forward mode
 
