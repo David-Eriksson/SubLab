@@ -143,7 +143,7 @@ eps = [];
 weightDecays = [0.00001];
 timeBias = [2];
 dropOutRatio = [0.1];
-numberOfTrainingSets = 4;
+%numberOfTrainingSets = 4;
 
 
 nrBatches = floor(g_opts.recordingSamples/g_opts.batchSize);
