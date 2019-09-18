@@ -81,7 +81,7 @@ try
             legends{length(legends)+1} = 'Reconstruction';
             plot(scaleStd(scaleMean(recSnippet))+3*spkSnippet); hold on;
             hold on;            
-            xlabel('Time (s)');
+            xlabel('Time (ms)');
             legend(legends);
         else
             nr = scaleStd(scaleMean(recSnippet));                        
@@ -96,6 +96,7 @@ try
         inds = round(1:(length(avgCorrs)-1)/5:length(avgCorrs));
 
         plot(separateChannels(mrecons(inds,:),7)');
+        xlabel('Time (ms)');
         title(sessionName);
         pause(0.001);
     end
