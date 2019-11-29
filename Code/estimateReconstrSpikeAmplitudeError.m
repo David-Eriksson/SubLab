@@ -91,6 +91,16 @@ function [timeErr, meanError, reconstrCorr] = estimateReconstrSpikeAmplitudeErro
                 reconstrCorr = mean(corrFactors);
             end
             
+            % New rank based correlationIndex
+            if ~isempty(goalSpikes)
+                [vs is] = sort(reconstr);
+                ranked = reconstr*0;
+                ranked(is) = (1:length(is))/length(is);
+                reconstrCorr = (mean(ranked(goalSpikes))-0.5)/0.5;             
+            else
+                reconstrCorr = NaN;
+            end
+            
             reconstrErr = mean((maxVals - spikeVals)./(2*2*stdVals));
         end
         
