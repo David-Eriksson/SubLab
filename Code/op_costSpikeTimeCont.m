@@ -47,8 +47,12 @@ elseif strcmp(command,'backprop') == 1
     shrinkage_correction = 0*x;
     goalSpikes_cont = x*0;
     
-    aboveThres = x.*(x>0)+1e-30;
-    p = sum(goal)*aboveThres./sum(aboveThres); %probabilityPerBinUnit
+    aboveThres = x.*(x>0);
+    if sum(aboveThres) > 0
+        p = sum(goal(~isnan(goal)))*aboveThres./sum(aboveThres); %probabilityPerBinUnit
+    else
+        p = aboveThres*0;
+    end
     
     goalSpikes_cont = x*0;
     for i = 1:length(goalSpikes)
@@ -68,7 +72,7 @@ elseif strcmp(command,'backprop') == 1
             if i<length(goalSpikes)
                 nextIndex = goalSpikes(i+1);
             end
-            MaxIndex = round((nextIndex+index)/2);
+            MaxIndex = round((nextIndex+index)/2)-1;
             MaxIndex = min([length(x) MaxIndex]);
             
             tLocal = (MinIndex:MaxIndex) - index;
@@ -93,9 +97,10 @@ elseif strcmp(command,'backprop') == 1
                 %delta_error = -min(abs(genSpikesCandidates-index));
                 delta_error = pLocal.*abs(tLocal); % decreasing spiking probability
                 error_matrix(index+tLocal) = error_matrix(index+tLocal) + delta_error;
-                %delta_error = 0;
-                delta_error = -sum(pLocal.*abs(tLocal)); % increase spiking probability
-                %delta_error = -mean(pLocal.*abs(tLocal)); % increase spiking probability
+                delta_error = 0;
+                if p(index) < 0
+                    delta_error = -sum(pLocal.*abs(tLocal)); % increase spiking probability
+                end
                 error_matrix(index) = error_matrix(index) + delta_error;
                 
                 %meanTemporalError = meanTemporalError+sum(abs(genSpikesCandidates-index));
