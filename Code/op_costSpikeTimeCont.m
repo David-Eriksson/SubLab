@@ -98,7 +98,7 @@ elseif strcmp(command,'backprop') == 1
                 delta_error = pLocal.*abs(tLocal); % decreasing spiking probability
                 error_matrix(index+tLocal) = error_matrix(index+tLocal) + delta_error;
                 delta_error = 0;
-                if p(index) < 0
+                if x(index) < 0
                     delta_error = -sum(pLocal.*abs(tLocal)); % increase spiking probability
                 end
                 error_matrix(index) = error_matrix(index) + delta_error;
