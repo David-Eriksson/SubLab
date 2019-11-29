@@ -74,7 +74,7 @@ elseif strcmp(command,'backprop') == 1
     pi = g_nodeArray(nodenr).pis;
     ai = g_nodeArray(nodenr).ais;
     
-    g_deltaParameters{pi} = (g_parameters{pi}*0+1).*mean(g_deltaActivities{ai}(:,timeIndices),2);
+    g_deltaParameters{pi} = g_deltaParameters{pi}+(g_parameters{pi}*0+1).*mean(g_deltaActivities{ai}(:,timeIndices),2);
 end
 
 
