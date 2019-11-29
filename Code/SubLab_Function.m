@@ -139,7 +139,7 @@ while g_opts.epoch <= maxNumberOfEpochs
 
         ff_sweep;
 
-        resetDeltaActivities;
+        resetDeltaActivitiesAndParams;
 
         bp_sweep;
 
