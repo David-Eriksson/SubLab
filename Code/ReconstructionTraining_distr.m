@@ -337,7 +337,7 @@ try
 
                 ff_sweep;
 
-                resetDeltaActivities;
+                resetDeltaActivitiesAndParams;
 
                 bp_sweep;
 
